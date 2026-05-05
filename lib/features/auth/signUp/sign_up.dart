@@ -1,120 +1,88 @@
-import 'package:el_bershama/core/style/colors_manger.dart';
-import 'package:el_bershama/core/style/styles_manger.dart';
-import 'package:el_bershama/core/widgets/button_widget.dart';
+import 'package:el_bershama/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class SignUp extends StatefulWidget {
-  const SignUp({super.key});
-
-  @override
-  State<SignUp> createState() => _SignUpState();
-}
-
-class _SignUpState extends State<SignUp> {
-
-late TextEditingController emailController;
-  late TextEditingController passwordController;
-  late TextEditingController nameController;
-
- 
-  @override
-  void initState(){
-    emailController = TextEditingController();
-    passwordController = TextEditingController();
-    nameController = TextEditingController();
-
-    super.initState();
-
-  }
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    nameController.dispose();
-
-    super.dispose();
-  }
-
-
+class SignUpScreen extends StatelessWidget {
+  const SignUpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      backgroundColor: ColorsManger.withColor,
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              
-              children: [
-                Image.asset('images/part bershama.png'),
-               Text('انشاء حساب',style: StylesManger.black50Bold,),
-                CustomTextField(  isPassword: false, hint: 'الاسم', icon:Icons.person ,),
-                CustomTextField(  isPassword: false, hint: 'البريد', icon:Icons.email) ,
-                CustomTextField(  isPassword: true, hint: 'كلمة المرور', icon:Icons.lock ,),
-                SizedBox(height: 35,),
-                ButtonWidget(onpress: (){
-                  Navigator.pushReplacementNamed(context, 'Home');
-                }, 
-                text: 'انشاء حساب'),
-                SizedBox(height: 35,),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(onPressed: (){
-                      Navigator.pushNamed(context, 'login') ;
-                      
-                    }, 
-                    child: Text('سجل دخولك',style: StylesManger.titleText20Style,)),
-                    Text('لديك حساب بالفعل ؟', style: StylesManger.titleText20Style,)
-                  ],
-                )
-                
-              ],
-              
-            ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(backgroundColor: Colors.transparent),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Icon(Icons.medication, size: 60, color: AppColors.primary),
+              const SizedBox(height: 24),
+              const Text(
+                'إنشاء حساب',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const Text(
+                'أنشئ حساباً جديداً لبدء رحلتك معنا',
+                style: TextStyle(color: AppColors.textLight),
+              ),
+              const SizedBox(height: 32),
+              _buildTextField(label: 'الاسم الكامل', icon: Icons.person_outline),
+              const SizedBox(height: 16),
+              _buildTextField(label: 'البريد الإلكتروني', icon: Icons.email_outlined),
+              const SizedBox(height: 16),
+              _buildTextField(label: 'كلمة المرور', icon: Icons.lock_outline, isPassword: true),
+              const SizedBox(height: 16),
+              _buildTextField(label: 'تأكيد كلمة المرور', icon: Icons.lock_outline, isPassword: true),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Checkbox(value: false, onChanged: (v) {}),
+                  const Expanded(
+                    child: Text('أوافق على الشروط والأحكام وسياسة الخصوصية', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/'),
+                child: const Text('إنشاء حساب'),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('لديك حساب بالفعل؟ '),
+                  GestureDetector(
+                    onTap: () => context.go('/login'),
+                    child: const Text('سجل دخولك', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
 
-
-class CustomTextField extends StatelessWidget {
-
-
-
-   final bool isPassword;
-    final IconData icon;
-  final String hint;
-  const CustomTextField(
-    {super.key,   required this.isPassword, required this.hint, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: TextField(
-        controller: TextEditingController(),
-        textDirection: TextDirection.rtl, 
-         textAlign: TextAlign.right,
-        obscureText: isPassword,
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon),
-          hintText: hint,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
+  Widget _buildTextField({required String label, required IconData icon, bool isPassword = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        TextField(
+          obscureText: isPassword,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: AppColors.textLight),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            filled: true,
+            fillColor: Colors.white,
           ),
         ),
-      ),
-       );
+      ],
+    );
   }
 }
