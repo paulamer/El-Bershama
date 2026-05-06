@@ -7,30 +7,24 @@ part 'medicine_model.g.dart';
 class MedicineModel extends HiveObject {
   @HiveField(0)
   final String id;
-
   @HiveField(1)
   final String name;
-
   @HiveField(2)
   final String dosage;
-
   @HiveField(3)
   final int dailyDoseCount;
-
   @HiveField(4)
-  final List<String> doseTimes; // Stores TimeOfDay as "HH:mm"
-
+  final List<String> doseTimes;
   @HiveField(5)
   final DateTime startDate;
-
   @HiveField(6)
   final DateTime? endDate;
-
   @HiveField(7)
   final String? imagePath;
-
   @HiveField(8)
-  final bool isActive;
+  final String instruction;
+  @HiveField(9)
+  late bool isActive;
 
   MedicineModel({
     String? id,
@@ -41,6 +35,8 @@ class MedicineModel extends HiveObject {
     required this.startDate,
     this.endDate,
     this.imagePath,
-    this.isActive = true,
-  }) : id = id ?? const Uuid().v4();
+    this.instruction = '',
+    bool isActive = true,
+  })  : id = id ?? const Uuid().v4(),
+        isActive = isActive;
 }

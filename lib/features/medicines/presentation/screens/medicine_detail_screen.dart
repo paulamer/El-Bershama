@@ -1,20 +1,33 @@
-import 'package:el_bershama/core/constants/app_colors.dart';
-import 'package:el_bershama/features/medicines/data/models/medicine_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'dart:io';
+import '../../../../core/style/app_colors.dart';
+import '../../../../core/style/app_styles.dart';
+import '../../data/models/medicine_model.dart';
+import '../providers/medicines_provider.dart';
 
-class MedicineDetailScreen extends StatelessWidget {
-  final MedicineModel medicine;
-  const MedicineDetailScreen({super.key, required this.medicine});
+class MedicineDetailScreen extends ConsumerWidget {
+  final MedicineModel? medicine;
+  const MedicineDetailScreen({super.key, this.medicine});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (medicine == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('خطأ')),
+        body: const Center(child: Text('الدواء غير موجود')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('تفاصيل الدواء'),
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Directionality(
@@ -22,37 +35,35 @@ class MedicineDetailScreen extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _buildHeroCard(),
               const SizedBox(height: 32),
               Row(
                 children: [
-                  _buildStatCard('مدة الاستخدام', '5 أيام'),
+                  _buildStatCard('مدة الاستخدام', _calculateDuration()),
                   const SizedBox(width: 16),
-                  _buildStatCard('عدد الجرعات يومياً', '${medicine.dailyDoseCount} مرات'),
+                  _buildStatCard('الجرعات يومياً', '${medicine!.dailyDoseCount} مرات'),
                 ],
               ),
               const SizedBox(height: 32),
               const Align(
                 alignment: Alignment.centerRight,
-                child: Text('مواعيد الجرعات', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: Text('مواعيد الجرعات', style: AppStyles.bodyLarge),
               ),
               const SizedBox(height: 16),
-              ...medicine.doseTimes.map((time) => _buildDoseTimeTile(time)),
-              const SizedBox(height: 32),
-              const Align(
-                alignment: Alignment.centerRight,
-                child: Text('معلومات إضافية', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 12),
-              _buildNoteItem('تناول الدواء بعد الأكل'),
-              _buildNoteItem('اشرب كمية كافية من الماء'),
+              ...medicine!.doseTimes.map((time) => _buildTimeTile(time)),
               const SizedBox(height: 48),
               ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                child: const Text('حذف الدواء', style: TextStyle(color: Colors.white)),
+                onPressed: () {
+                  ref.read(medicinesProvider.notifier).deleteMedicine(medicine!.id);
+                  context.pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('حذف الدواء', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -61,24 +72,37 @@ class MedicineDetailScreen extends StatelessWidget {
     );
   }
 
+  String _calculateDuration() {
+    if (medicine!.endDate == null) return 'مفتوح';
+    final days = medicine!.endDate!.difference(medicine!.startDate).inDays;
+    return '$days يوم';
+  }
+
   Widget _buildHeroCard() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            child: const Icon(Icons.medication, size: 60, color: AppColors.primary),
-          ),
+          if (medicine!.imagePath != null && File(medicine!.imagePath!).existsSync())
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.file(
+                File(medicine!.imagePath!),
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            const Icon(Icons.medication, size: 80, color: Colors.white),
           const SizedBox(height: 16),
-          Text(medicine.name, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          Text(medicine.dosage, style: TextStyle(color: Colors.white.withOpacity(0.8))),
+          Text(medicine!.name, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(medicine!.dosage, style: const TextStyle(color: Colors.white70, fontSize: 18)),
         ],
       ),
     );
@@ -87,55 +111,31 @@ class MedicineDetailScreen extends StatelessWidget {
   Widget _buildStatCard(String label, String value) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.all(20),
+        decoration: AppStyles.cardDecoration,
         child: Column(
           children: [
-            Text(label, style: const TextStyle(color: AppColors.textLight, fontSize: 12)),
+            Text(label, style: AppStyles.bodySmall),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(value, style: AppStyles.bodyLarge),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDoseTimeTile(String time) {
+  Widget _buildTimeTile(String time) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: AppStyles.cardDecoration,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(time, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 18)),
-              const Text('بعد الإفطار', style: TextStyle(color: AppColors.textLight, fontSize: 12)),
-            ],
-          ),
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
-            ),
-            child: const Icon(Icons.check, size: 16, color: AppColors.primary),
-          ),
+          Text(time, style: AppStyles.bodyLarge.copyWith(color: AppColors.primary)),
+          const Icon(Icons.check_circle, color: AppColors.primary),
         ],
       ),
-    );
-  }
-
-  Widget _buildNoteItem(String text) {
-    return Row(
-      children: [
-        const Icon(Icons.circle, size: 6, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Text(text, style: const TextStyle(color: AppColors.textLight)),
-      ],
     );
   }
 }

@@ -1,30 +1,36 @@
-import 'package:el_bershama/core/style/styles_manger.dart';
 import 'package:flutter/material.dart';
+import '../style/app_colors.dart';
+import '../style/app_styles.dart';
 
 class ButtonWidget extends StatelessWidget {
-  final VoidCallback onpress;
   final String text;
-  const ButtonWidget({super.key, required this.onpress, required this.text});
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  final bool isLoading;
+
+  const ButtonWidget({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.backgroundColor = AppColors.primary,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-     final height = MediaQuery.of(context).size.height;
-    final double width = MediaQuery.of(context).size.width;
-    return SizedBox(
-      
-      width: width * 0.9,
-      height: height * 0.065,
-      child: ElevatedButton(
-        onPressed: onpress,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xff2054BB),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
+    return ElevatedButton(
+      onPressed: isLoading ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Text(text, style: StylesManger.white20Bold),
+        elevation: 0,
       ),
-    
+      child: isLoading
+          ? const CircularProgressIndicator(color: Colors.white)
+          : Text(text, style: AppStyles.buttonText),
     );
   }
 }

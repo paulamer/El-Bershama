@@ -25,7 +25,7 @@ class MedicineModelAdapter extends TypeAdapter<MedicineModel> {
       startDate: fields[5] as DateTime,
       endDate: fields[6] as DateTime?,
       imagePath: fields[7] as String?,
-      isActive: fields[8] as bool,
+      instruction: fields[8] as String,
     );
   }
 
@@ -50,7 +50,7 @@ class MedicineModelAdapter extends TypeAdapter<MedicineModel> {
       ..writeByte(7)
       ..write(obj.imagePath)
       ..writeByte(8)
-      ..write(obj.isActive);
+      ..write(obj.instruction);
   }
 
   @override
